@@ -1,81 +1,76 @@
 import os
+import pprint
+from DBCon import DBCon
+pp = pprint.PrettyPrinter(indent=2, width=80, compact=False)
 
 import requests
-import psycopg2
 import json
 
 url = "https://swapi.dev/api/"
-db = None
-films = set()
-planets = set()
-spaceships = set()
-vehicles = set()
-people = set()
-species = set()
+db = DBCon()
 
-films.add(f"{url}films/1/")
-films.add(f"{url}films/2/")
-films.add(f"{url}films/3/")
-films.add(f"{url}films/4/")
-films.add(f"{url}films/5/")
-films.add(f"{url}films/6/")
+urls = {
+    "films": set(),
+    "planets": set(),
+    "starships": set(),
+    "vehicles": set(),
+    "characters": set(),
+    "species": set()
+}
 
-def parse_film(film):
-    parent = ''
-    keys = set()
-    json_data = {}
-    if isinstance(parent, str):
-        for k, v in film.items():
-            #full_key = k #f"{parent}.{k}" if parent else k
-            keys.add(k)
-            json_data[k] = v
-        if isinstance(parent, list):
-        print(f"Dolk")
-    print(f"Data: {json_data}")
+urls["films"].add(f"{url}films/1/")
+urls["films"].add(f"{url}films/2/")
+urls["films"].add(f"{url}films/3/")
+urls["films"].add(f"{url}films/4/")
+urls["films"].add(f"{url}films/5/")
+urls["films"].add(f"{url}films/6/")
 
-def pull_data():
-    for film in films:
-        response = requests.get(film)
-        print(response.status_code)
-        parse_film(json.loads(response.text))
-def open_db(password):
-    global db
+
+def pull_urls(film):
     try:
-        print("Password:" + str(password))
-        db = psycopg2.connect(
-            host="localhost",
-            port=5432,
-            database="postgres",
-            user="postgres",
-            password=f"{password}"
-        )
-        cursor = db.cursor()
-        # Perform your database operations here
-        # Example: cursor.execute("INSERT INTO table_name (column1) VALUES (value1);")
-        db.commit()
-        cursor.close()
-        db.close()
+        for k, v in film.items():
+            if isinstance(v, list):
+                urls[k].update(v)
+
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"Error: {e}")
+
+
+def store_url(label, fn):
+    for lable_url in urls[label]:
+        response = requests.get(lable_url)
+        print(response.status_code)
+        data = json.loads(response.text)
+        fn(data) #db.update_starship(data)
 
 def run():
-    pass
-    #response = requests.get(f"{people_url}{8}")
-    #data = json.loads(response.text)
-    #keys = set()
-    #parent = ''
-    #for k, v in data.items():
-        #full_key = f"{parent}.{k}" if parent else k
-        #keys.add(full_key)
-        #print("Key: " + full_key)
+    db.open(pw)
+    print("Database opened")
 
+    for film in urls["films"]:
+        response = requests.get(film)
+        #print(response.status_code)
+        pull_urls(json.loads(response.text))
+    #pp.pprint(urls)
 
-    #print(keys)
+    store_url("planets", db.update_planet)
+    store_url("starships",db.update_starship)
+    store_url("characters", db.update_character)
+    store_url("species", db.update_species)
+    store_url("vehicles", db.update_vehicle)
+    store_url("films", db.update_film)
 
+    db.close()
+    print("Database closed")
 
 
 if __name__ == "__main__":
-    pw = os.environ.get('POSTGRES_PASSWORD')
-    open_db(pw)
-    pull_data()
+    #pw = os.environ.get('POSTGRES_PASSWORD')
+    pw = "postgres_password"
     run()
+
+
+"""
+films > planets > starships > vehicles > characters >
+characters > films > species > > planets > starships >
+"""
