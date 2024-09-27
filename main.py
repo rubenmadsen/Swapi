@@ -39,9 +39,13 @@ def pull_urls(film):
 def store_url(label, fn):
     for lable_url in urls[label]:
         response = requests.get(lable_url)
-        print(response.status_code)
+        #print(response.status_code)
         data = json.loads(response.text)
         fn(data) #db.update_starship(data)
+
+
+
+
 
 def run():
     db.open(pw)
@@ -52,12 +56,17 @@ def run():
         #print(response.status_code)
         pull_urls(json.loads(response.text))
     #pp.pprint(urls)
-
+    print("Planets")
     store_url("planets", db.update_planet)
+    print("Starships")
     store_url("starships",db.update_starship)
+    print("Characters")
     store_url("characters", db.update_character)
+    print("Species")
     store_url("species", db.update_species)
+    print("Vehicles")
     store_url("vehicles", db.update_vehicle)
+    print("Films")
     store_url("films", db.update_film)
 
     db.close()

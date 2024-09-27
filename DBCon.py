@@ -1,10 +1,21 @@
 import psycopg2
 from datetime import datetime
-
+import requests
+import json
 
 class DBCon:
     def __init__(self):
         self.con = None
+
+    def convert_timestamp(self, ts):
+        if isinstance(ts, str):
+            for fmt in ('%Y-%m-%dT%H:%M:%S.%fZ', '%Y-%m-%dT%H:%M:%SZ'):
+                try:
+                    return datetime.strptime(ts, fmt)
+                except ValueError:
+                    continue
+            raise ValueError(f"Time data '{ts}' does not match any known format")
+        return ts
 
     def open(self, password):
         try:
@@ -78,7 +89,6 @@ class DBCon:
             print(f"An error occurred while inserting/updating starship: {e}")
             self.con.rollback()
 
-
     def update_character(self, character_json):
         try:
             with self.con.cursor() as cursor:
@@ -86,6 +96,27 @@ class DBCon:
                 character_json['created'] = datetime.strptime(character_json['created'], '%Y-%m-%dT%H:%M:%S.%fZ')
                 character_json['edited'] = datetime.strptime(character_json['edited'], '%Y-%m-%dT%H:%M:%S.%fZ')
 
+                # Check if 'homeworld' exists
+                homeworld_url = character_json.get('homeworld')
+                if homeworld_url:
+                    # Check if the homeworld exists in the 'planets' table
+                    cursor.execute("SELECT 1 FROM planets WHERE url = %s", (homeworld_url,))
+                    if cursor.fetchone() is None:
+                        # The planet does not exist in the database, fetch and insert it
+                        #planet_data = self.fetch_planet_data(homeworld_url)
+                        response = requests.get(homeworld_url)
+                        planet_data = json.loads(response.text)
+                        if planet_data:
+                            self.update_planet(planet_data)
+                        else:
+                            print(f"Failed to fetch planet data for {homeworld_url}")
+                            # Handle the case where planet data couldn't be fetched
+                            homeworld_url = None
+                else:
+                    # If homeworld is None or empty, set to None
+                    homeworld_url = None
+
+                # Prepare the values
                 values = (
                     character_json['url'],
                     character_json['name'],
@@ -96,7 +127,7 @@ class DBCon:
                     character_json['eye_color'],
                     character_json['birth_year'],
                     character_json['gender'],
-                    character_json['homeworld'],
+                    homeworld_url,
                     character_json['created'],
                     character_json['edited']
                 )
@@ -125,11 +156,13 @@ class DBCon:
             self.con.rollback()
 
     def update_vehicle(self, vehicle_json):
+
+
         try:
             with self.con.cursor() as cursor:
                 # Parse datetime fields
-                vehicle_json['created'] = datetime.strptime(vehicle_json['created'], '%Y-%m-%dT%H:%M:%S.%fZ')
-                vehicle_json['edited'] = datetime.strptime(vehicle_json['edited'], '%Y-%m-%dT%H:%M:%S.%fZ')
+                vehicle_json['created'] = self.convert_timestamp(vehicle_json['created'])
+                vehicle_json['edited'] = self.convert_timestamp(vehicle_json['edited'])
 
                 values = (
                     vehicle_json['url'],
@@ -218,8 +251,10 @@ class DBCon:
         try:
             with self.con.cursor() as cursor:
                 # Parse datetime fields
-                planet_json['created'] = datetime.strptime(planet_json['created'], '%Y-%m-%dT%H:%M:%S.%fZ')
-                planet_json['edited'] = datetime.strptime(planet_json['edited'], '%Y-%m-%dT%H:%M:%S.%fZ')
+                planet_json['created'] = self.convert_timestamp(planet_json['created'])
+                planet_json['edited'] = self.convert_timestamp(planet_json['edited'])
+                #planet_json['created'] = datetime.strptime(planet_json['created'], '%Y-%m-%dT%H:%M:%S.%fZ')
+                #planet_json['edited'] = datetime.strptime(planet_json['edited'], '%Y-%m-%dT%H:%M:%S.%fZ')
 
                 values = (
                     planet_json['url'],
@@ -266,6 +301,29 @@ class DBCon:
                 species_json['created'] = datetime.strptime(species_json['created'], '%Y-%m-%dT%H:%M:%S.%fZ')
                 species_json['edited'] = datetime.strptime(species_json['edited'], '%Y-%m-%dT%H:%M:%S.%fZ')
 
+                # Check if 'homeworld' is not None or empty
+                homeworld_url = species_json.get('homeworld')
+                if homeworld_url:
+                    # Check if the homeworld exists in the 'planets' table
+                    cursor.execute("SELECT 1 FROM planets WHERE url = %s", (homeworld_url,))
+                    if cursor.fetchone() is None:
+                        # The planet does not exist in the database, fetch and insert it
+                        #planet_data = self.fetch_planet_data(homeworld_url)
+                        response = requests.get(homeworld_url)
+                        planet_data = json.loads(response.text)
+                        if planet_data:
+                            self.update_planet(planet_data)
+                        else:
+                            print(f"Failed to fetch planet data for {homeworld_url}")
+                            # Handle the case where planet data couldn't be fetched
+                            # You might decide to set homeworld to None or skip inserting this species
+                            # For this example, let's set homeworld_url to None
+                            homeworld_url = None
+                else:
+                    # If homeworld is None or empty, set to None
+                    homeworld_url = None
+
+                # Prepare the values for insertion
                 values = (
                     species_json['url'],
                     species_json['name'],
@@ -276,7 +334,7 @@ class DBCon:
                     species_json['hair_colors'],
                     species_json['eye_colors'],
                     species_json['average_lifespan'],
-                    species_json['homeworld'],
+                    homeworld_url,
                     species_json['language'],
                     species_json['created'],
                     species_json['edited']
@@ -306,4 +364,3 @@ class DBCon:
         except Exception as e:
             print(f"An error occurred while inserting/updating species: {e}")
             self.con.rollback()
-
