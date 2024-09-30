@@ -13,6 +13,7 @@ Install the necessary packages by running:
 ```bash
 pip install requests
 pip install psycopg2-binary
+pip install flask
 ```
 
 ```bash
