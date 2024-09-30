@@ -7,9 +7,9 @@ db = DBCon()
 def get_():
     return jsonify({'message': 'Hello, World!'})
 
-@app.route('/api/starships', methods=['GET'])
+@app.route('/api/characters', methods=['GET'])
 def get_startships():
-    return jsonify(db.get_starship_pilots_and_homeworlds())
+    return jsonify(db.get_characters_and_homeworlds())
 
 if __name__ == '__main__':
     pw = "postgres_password"

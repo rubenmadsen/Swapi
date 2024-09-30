@@ -365,7 +365,7 @@ class DBCon:
             print(f"An error occurred while inserting/updating species: {e}")
             self.con.rollback()
 
-    def get_starship_pilots_and_homeworlds(self):
+    def get_characters_and_homeworlds(self):
         try:
             with self.con.cursor() as cursor:
                 cursor.execute("""
