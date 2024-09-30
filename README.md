@@ -18,6 +18,11 @@ pip install psycopg2-binary
 ```bash
 run ./path/to/install.sh
 ```
+Edit the crontab using:
+``` bash
+crontab -e
+```
+and add this line "0 2 * * * /usr/bin/python /path/to/main.py"
 
 ### Run api
 ```bash

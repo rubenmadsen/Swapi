@@ -9,7 +9,6 @@ sleep 5
 cat init.sql | docker exec -i my-postgres psql -U postgres
 
 
-
 #docker pull postgres
 #pip install psycopg2-binary
 #pip install requests
