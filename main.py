@@ -44,9 +44,6 @@ def store_url(label, fn):
         fn(data) #db.update_starship(data)
 
 
-
-
-
 def run():
     db.open(pw)
     print("Database opened")

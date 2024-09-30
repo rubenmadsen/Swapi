@@ -364,3 +364,25 @@ class DBCon:
         except Exception as e:
             print(f"An error occurred while inserting/updating species: {e}")
             self.con.rollback()
+
+    def get_starship_pilots_and_homeworlds(self):
+        try:
+            with self.con.cursor() as cursor:
+                cursor.execute("""
+                    SELECT
+                        characters.name AS character_name,
+                        planets.name AS homeworld_name
+                    FROM
+                        characters
+                    JOIN
+                        planets ON characters.homeworld = planets.url
+                    ORDER BY
+                        characters.name;
+                """)
+                results = cursor.fetchall()
+                return results
+                for row in results:
+                    character_name, homeworld_name = row
+                    print(f"Character: {character_name}, Homeworld: {homeworld_name}")
+        except Exception as e:
+            print(f"An error occurred while retrieving pilots and their homeworlds: {e}")
