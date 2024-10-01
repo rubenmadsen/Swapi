@@ -10,8 +10,8 @@ url = "https://swapi.dev/api/"
 db = DBCon()
 
 urls = {
-    "films": set(),
-    "planets": set(),
+    "films":    set(),
+    "planets":  set(),
     "starships": set(),
     "vehicles": set(),
     "characters": set(),
@@ -25,6 +25,10 @@ urls["films"].add(f"{url}films/4/")
 urls["films"].add(f"{url}films/5/")
 urls["films"].add(f"{url}films/6/")
 
+def flatten(data_json):
+    for k,v in data_json.items():
+        if isinstance(v, list):
+            data_json[k] = ','.join(v)
 
 def pull_urls(film):
     try:
@@ -36,12 +40,16 @@ def pull_urls(film):
         print(f"Error: {e}")
 
 
-def store_url(label, fn):
-    for lable_url in urls[label]:
-        response = requests.get(lable_url)
+def store_url(label):
+    for label_url in urls[label]:
+        response = requests.get(label_url)
         #print(response.status_code)
-        data = json.loads(response.text)
-        fn(data) #db.update_starship(data)
+        #data = json.loads(response.text)
+        #fn(response.json()) #db.update_starship(data)
+        data = response.json()
+        flatten(data)
+        print(f"response_json:{data}")
+        db.add_to_postgres(label, data)
 
 
 def run():
@@ -53,18 +61,19 @@ def run():
         #print(response.status_code)
         pull_urls(json.loads(response.text))
     #pp.pprint(urls)
+
     print("Fetching Planets...")
-    store_url("planets", db.update_planet)
+    store_url("planets")
     print("Fetching Starships...")
-    store_url("starships",db.update_starship)
+    store_url("starships")
     print("Fetching Characters...")
-    store_url("characters", db.update_character)
+    store_url("characters")
     print("Fetching Species...")
-    store_url("species", db.update_species)
+    store_url("species")
     print("Fetching Vehicles...")
-    store_url("vehicles", db.update_vehicle)
+    store_url("vehicles")
     print("Fetching Films...")
-    store_url("films", db.update_film)
+    store_url("films")
 
     db.close()
     print("Database closed")

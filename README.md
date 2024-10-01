@@ -13,6 +13,8 @@ Install the necessary packages by running:
 ```bash
 pip install requests
 pip install psycopg2-binary
+pip install pandas
+pip install sqlalchemy 
 pip install flask
 ```
 
