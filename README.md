@@ -18,8 +18,9 @@ pip install sqlalchemy
 pip install flask
 ```
 
+Run the install file
 ```bash
-run ./path/to/install.sh
+./path/to/install.sh
 ```
 Edit the crontab using:
 ``` bash
