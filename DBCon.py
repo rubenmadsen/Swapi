@@ -21,6 +21,14 @@ class DBCon:
             raise ValueError(f"Time data '{ts}' does not match any known format")
         return ts
 
+    def exists(self, table_name, primary_key):
+        cursor = self.con.cursor()
+        query = f"SELECT EXISTS (SELECT 1 FROM {table_name} WHERE url = %s)"
+        cursor.execute(query, (primary_key,))
+        exists = cursor.fetchone()[0]
+        cursor.close()
+        return exists
+
     def open(self, password):
         try:
             self.con = psycopg2.connect(
