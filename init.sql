@@ -92,3 +92,55 @@ CREATE TABLE species (
     created TIMESTAMP,
     edited TIMESTAMP
 );
+
+
+
+
+
+
+CREATE TABLE film_characters (
+    film_url TEXT REFERENCES films(url) ON DELETE CASCADE,
+    character_url TEXT REFERENCES characters(url) ON DELETE CASCADE,
+    PRIMARY KEY (film_url, character_url)
+);
+
+CREATE TABLE film_starships (
+    film_url TEXT REFERENCES films(url) ON DELETE CASCADE,
+    starship_url TEXT REFERENCES starships(url) ON DELETE CASCADE,
+    PRIMARY KEY (film_url, starship_url)
+);
+
+CREATE TABLE film_planets (
+    film_url TEXT REFERENCES films(url) ON DELETE CASCADE,
+    planet_url TEXT REFERENCES planets(url) ON DELETE CASCADE,
+    PRIMARY KEY (film_url, planet_url)
+);
+
+CREATE TABLE film_vehicles (
+    film_url TEXT REFERENCES films(url) ON DELETE CASCADE,
+    vehicle_url TEXT REFERENCES vehicles(url) ON DELETE CASCADE,
+    PRIMARY KEY (film_url, vehicle_url)
+);
+
+CREATE TABLE film_species (
+    film_url TEXT REFERENCES films(url) ON DELETE CASCADE,
+    species_url TEXT REFERENCES species(url) ON DELETE CASCADE,
+    PRIMARY KEY (film_url, species_url)
+);
+
+CREATE TABLE character_starships (
+    character_url TEXT REFERENCES characters(url) ON DELETE CASCADE,
+    starship_url TEXT REFERENCES starships(url) ON DELETE CASCADE,
+    PRIMARY KEY (character_url, starship_url)
+);
+
+CREATE TABLE character_vehicles (
+    character_url TEXT REFERENCES characters(url) ON DELETE CASCADE,
+    vehicle_url TEXT REFERENCES vehicles(url) ON DELETE CASCADE,
+    PRIMARY KEY (character_url, vehicle_url)
+);
+
+
+
+
+

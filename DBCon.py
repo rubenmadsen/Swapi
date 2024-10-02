@@ -39,6 +39,9 @@ class DBCon:
     def close(self):
         self.con.close()
 
+    def fetch(self, table_name, url):
+        pass
+
     def add_to_postgres(self, table_name, data_json):
         df = pd.DataFrame([data_json])
 

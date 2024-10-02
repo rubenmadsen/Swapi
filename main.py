@@ -5,7 +5,12 @@ pp = pprint.PrettyPrinter(indent=2, width=80, compact=False)
 
 import requests
 import json
-
+relations = {
+    'table': None,
+    'e1': None,
+    'e2': None
+}
+relations_list = []
 url = "https://swapi.dev/api/"
 db = DBCon()
 
@@ -33,7 +38,6 @@ def flatten(data_json):
             deletion.append(k)
         if v == "unknown" or v == "NaN" or v == "n/a" or v == "none" or v == "indefinite":
             data_json[k] = None
-
 
     for d in deletion:
         del data_json[d]
@@ -95,8 +99,3 @@ if __name__ == "__main__":
     pw = "postgres_password"
     run()
 
-
-"""
-films > planets > starships > vehicles > characters >
-characters > films > species > > planets > starships >
-"""
