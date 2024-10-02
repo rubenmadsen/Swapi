@@ -31,7 +31,7 @@ def flatten(data_json):
         if isinstance(v, list):
             data_json[k] = ','.join(v)
             deletion.append(k)
-        if v == "unknown" or v == "NaN":
+        if v == "unknown" or v == "NaN" or v == "n/a" or v == "none" or v == "indefinite":
             data_json[k] = None
 
 
@@ -48,14 +48,22 @@ def pull_urls(film):
         print(f"Error: {e}")
 
 
+
 def store_url(label):
     for label_url in urls[label]:
         response = requests.get(label_url)
         data = response.json()
         flatten(data)
-        print(f"\tresponse_json:{data}")
-        db.add_to_postgres(label, data)
-
+        #print(f"\tresponse_json:{data}")
+        try:
+            db.add_to_postgres(label, data)
+        except Exception as e:
+            print("")
+            print("")
+            print(f"{label_url}: {e}")
+            print(f"Error: {e}")
+            print("")
+            print("")
 
 def run():
     db.open(pw)
@@ -65,18 +73,18 @@ def run():
         response = requests.get(film)
         pull_urls(json.loads(response.text))
 
+    # print("Fetching Films...")
+    # store_url("films")
     # print("Fetching Planets...")
     # store_url("planets")
     # print("Fetching Starships...")
     # store_url("starships")
-    print("Fetching Characters...")
-    store_url("characters")
-    # print("Fetching Species...")
-    # store_url("species")
-    # print("Fetching Vehicles...")
-    # store_url("vehicles")
-    # print("Fetching Films...")
-    # store_url("films")
+    # print("Fetching Characters...")
+    # store_url("characters")
+    print("Fetching Species...")
+    store_url("species")
+    print("Fetching Vehicles...")
+    store_url("vehicles")
 
     db.close()
     print("Database closed")

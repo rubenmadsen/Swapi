@@ -35,7 +35,7 @@ CREATE TABLE characters (
     eye_color TEXT,
     birth_year TEXT,
     gender TEXT,
-    homeworld TEXT,
+    homeworld TEXT REFERENCES planets(url),
     created TIMESTAMP,
     edited TIMESTAMP
 );
