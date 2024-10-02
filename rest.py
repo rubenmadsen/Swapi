@@ -9,7 +9,7 @@ def get_():
 
 @app.route('/api/characters', methods=['GET'])
 def get_startships():
-    return jsonify(db.get_characters_and_homeworlds())
+    return db.get_characters_and_homeworlds().to_json(orient='records')
 
 if __name__ == '__main__':
     pw = "postgres_password"
