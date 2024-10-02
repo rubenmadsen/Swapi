@@ -41,8 +41,32 @@ class DBCon:
 
     def add_to_postgres(self, table_name, data_json):
         df = pd.DataFrame([data_json])
-        engine = create_engine('postgresql+psycopg2://', creator=lambda:self.con)
+
+        if table_name == "starships":
+            def process_crew_value(value):
+                if isinstance(value, str) and '-' in value:
+                    lower, upper = map(int, value.split('-'))
+                    return (lower + upper) // 2
+                elif isinstance(value, str):
+                    return int(value.replace(",", ""))
+                else:
+                    return 0
+
+            df["crew"] = df["crew"].apply(process_crew_value)
+            df["max_atmosphering_speed"] = pd.to_numeric(df["max_atmosphering_speed"].str.extract(r'(\d+)')[0],errors='coerce').fillna(0).astype(int)
+            df["passengers"] = pd.to_numeric(df["passengers"].str.replace(",", ""), errors='coerce').fillna(0).astype(int)
+            df["length"] = pd.to_numeric(df["length"].str.extract(r'(\d+\.?\d*)')[0], errors='coerce')
+        if table_name == "characters":
+            df["mass"] = pd.to_numeric(df["mass"].str.replace(",", ""), errors='coerce').fillna(0).astype(int)
+
+        engine = create_engine('postgresql+psycopg2://', creator=lambda: self.con)
         df.to_sql(table_name, con=engine, if_exists='append', index=False)
+
+    def create_fact_table(self):
+        pass
+
+
+
 
     def get_characters_and_homeworlds(self):
         try:
