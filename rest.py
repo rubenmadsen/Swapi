@@ -14,4 +14,4 @@ def get_startships():
 if __name__ == '__main__':
     pw = "postgres_password"
     db.open(pw)
-    app.run(debug=True, port=4200, host="localhost")
+    app.run(debug=True, port=4200, host='0.0.0.0')
