@@ -44,25 +44,47 @@ class DBCon:
         engine = create_engine('postgresql+psycopg2://', creator=lambda:self.con)
         df.to_sql(table_name, con=engine, if_exists='append', index=False)
 
-
     def get_characters_and_homeworlds(self):
         try:
-            with self.con.cursor() as cursor:
-                cursor.execute("""
-                    SELECT
-                        characters.name AS character_name,
-                        planets.name AS homeworld_name
-                    FROM
-                        characters
-                    JOIN
-                        planets ON characters.homeworld = planets.url
-                    ORDER BY
-                        characters.name;
-                """)
-                results = cursor.fetchall()
-                return results
-                for row in results:
-                    character_name, homeworld_name = row
-                    print(f"Character: {character_name}, Homeworld: {homeworld_name}")
+            query = """
+                SELECT
+                    characters.name AS character_name,
+                    planets.name AS homeworld_name
+                FROM
+                    characters
+                JOIN
+                    planets ON characters.homeworld = planets.url
+                ORDER BY
+                    characters.name;
+            """
+
+            df = pd.read_sql(query, self.con)
+
+            print(df)
+            return df
+
         except Exception as e:
             print(f"An error occurred while retrieving pilots and their homeworlds: {e}")
+
+
+    # def get_characters_and_homeworlds(self):
+    #     try:
+    #         with self.con.cursor() as cursor:
+    #             cursor.execute("""
+    #                 SELECT
+    #                     characters.name AS character_name,
+    #                     planets.name AS homeworld_name
+    #                 FROM
+    #                     characters
+    #                 JOIN
+    #                     planets ON characters.homeworld = planets.url
+    #                 ORDER BY
+    #                     characters.name;
+    #             """)
+    #             results = cursor.fetchall()
+    #             return results
+    #             for row in results:
+    #                 character_name, homeworld_name = row
+    #                 print(f"Character: {character_name}, Homeworld: {homeworld_name}")
+    #     except Exception as e:
+    #         print(f"An error occurred while retrieving pilots and their homeworlds: {e}")
