@@ -17,7 +17,7 @@ CREATE TABLE planets (
     orbital_period INTEGER,
     diameter INTEGER,
     climate TEXT,
-    gravity TEXT,
+    gravity NUMERIC,
     terrain TEXT,
     surface_water NUMERIC,
     population BIGINT,
@@ -96,51 +96,55 @@ CREATE TABLE species (
 
 
 
-
-
 CREATE TABLE films_characters (
-    film_url TEXT REFERENCES films(url) ON DELETE CASCADE,
-    character_url TEXT REFERENCES characters(url) ON DELETE CASCADE,
-    PRIMARY KEY (film_url, character_url)
+    films_url TEXT REFERENCES films(url) ON DELETE NO ACTION,
+    characters_url TEXT REFERENCES characters(url) ON DELETE NO ACTION,
+    PRIMARY KEY (films_url, characters_url)
 );
 
 CREATE TABLE films_starships (
-    film_url TEXT REFERENCES films(url) ON DELETE CASCADE,
-    starship_url TEXT REFERENCES starships(url) ON DELETE CASCADE,
-    PRIMARY KEY (film_url, starship_url)
+    films_url TEXT REFERENCES films(url) ON DELETE NO ACTION,
+    starships_url TEXT REFERENCES starships(url) ON DELETE NO ACTION,
+    PRIMARY KEY (films_url, starships_url)
 );
 
 CREATE TABLE films_planets (
-    film_url TEXT REFERENCES films(url) ON DELETE CASCADE,
-    planet_url TEXT REFERENCES planets(url) ON DELETE CASCADE,
-    PRIMARY KEY (film_url, planet_url)
+    films_url TEXT REFERENCES films(url) ON DELETE NO ACTION,
+    planets_url TEXT REFERENCES planets(url) ON DELETE NO ACTION,
+    PRIMARY KEY (films_url, planets_url)
 );
 
 CREATE TABLE films_vehicles (
-    film_url TEXT REFERENCES films(url) ON DELETE CASCADE,
-    vehicle_url TEXT REFERENCES vehicles(url) ON DELETE CASCADE,
-    PRIMARY KEY (film_url, vehicle_url)
+    films_url TEXT REFERENCES films(url) ON DELETE NO ACTION,
+    vehicles_url TEXT REFERENCES vehicles(url) ON DELETE NO ACTION,
+    PRIMARY KEY (films_url, vehicles_url)
 );
 
 CREATE TABLE films_species (
-    film_url TEXT REFERENCES films(url) ON DELETE CASCADE,
-    species_url TEXT REFERENCES species(url) ON DELETE CASCADE,
-    PRIMARY KEY (film_url, species_url)
+    films_url TEXT REFERENCES films(url) ON DELETE NO ACTION,
+    species_url TEXT REFERENCES species(url) ON DELETE NO ACTION,
+    PRIMARY KEY (films_url, species_url)
 );
 
 CREATE TABLE characters_starships (
-    character_url TEXT REFERENCES characters(url) ON DELETE CASCADE,
-    starship_url TEXT REFERENCES starships(url) ON DELETE CASCADE,
-    PRIMARY KEY (character_url, starship_url)
+    characters_url TEXT REFERENCES characters(url) ON DELETE NO ACTION,
+    starships_url TEXT REFERENCES starships(url) ON DELETE NO ACTION,
+    PRIMARY KEY (characters_url, starships_url)
 );
 
 CREATE TABLE characters_vehicles (
-    character_url TEXT REFERENCES characters(url) ON DELETE CASCADE,
-    vehicle_url TEXT REFERENCES vehicles(url) ON DELETE CASCADE,
-    PRIMARY KEY (character_url, vehicle_url)
+    characters_url TEXT REFERENCES characters(url) ON DELETE NO ACTION,
+    vehicles_url TEXT REFERENCES vehicles(url) ON DELETE NO ACTION,
+    PRIMARY KEY (characters_url, vehicles_url)
 );
 
-
-
-
-
+CREATE TABLE characters_planets (
+    characters_url TEXT REFERENCES characters(url) ON DELETE NO ACTION,
+    planets_url TEXT REFERENCES planets(url) ON DELETE NO ACTION,
+    PRIMARY KEY (characters_url, planets_url)
+);
+CREATE TABLE characters_species (
+    characters_url TEXT REFERENCES characters(url) ON DELETE NO ACTION,
+    species_url TEXT REFERENCES species(url) ON DELETE NO ACTION,
+    PRIMARY KEY (characters_url, species_url)
+);

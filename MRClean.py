@@ -26,13 +26,20 @@ def clean_starship(df):
                                                  errors='coerce').fillna(0).astype(int)
     df["passengers"] = pd.to_numeric(df["passengers"].str.replace(",", ""), errors='coerce').fillna(0).astype(int)
     df["length"] = pd.to_numeric(df["length"].str.extract(r'(\d+\.?\d*)')[0], errors='coerce')
-
+    return df
 
 def clean_character(df):
     df["mass"] = pd.to_numeric(df["mass"].str.replace(",", ""), errors='coerce').fillna(0).astype(int)
+    return df
 
 def clean_species(df):
     pass
+
+def clean_planets(df):
+    df["gravity"] = pd.to_numeric(df["gravity"].str.extract(r'(\d+\.?\d*)')[0], errors='coerce')
+
+    return df
+
 def clean(table_name, json_data):
     json_data['edited'] = convert_timestamp(json_data["edited"])
     json_data['created'] = convert_timestamp(json_data["created"])
@@ -50,8 +57,10 @@ def clean(table_name, json_data):
     df = pd.DataFrame([json_data])
 
     if table_name == "starships":
-        clean_starship(df)
+        df = clean_starship(df)
     elif table_name == "characters":
-        clean_character(df)
+        df = clean_character(df)
+    elif table_name == "planets":
+        df = clean_planets(df)
 
     return df

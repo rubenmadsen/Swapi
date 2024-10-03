@@ -1,16 +1,6 @@
-import os
-import pprint
 from DBCon import DBCon
-pp = pprint.PrettyPrinter(indent=2, width=80, compact=False)
 
-import requests
-import json
-relations = {
-    'table': None,
-    'e1': None,
-    'e2': None
-}
-relations_list = []
+
 url = "https://swapi.dev/api/"
 db = DBCon()
 
@@ -32,31 +22,6 @@ urls["films"].add(f"{url}films/6/")
 
 
 
-def pull_urls(film):
-    try:
-        for k, v in film.items():
-            if isinstance(v, list):
-                urls[k].update(v)
-
-    except Exception as e:
-        print(f"Error: {e}")
-
-
-
-# def store_url(label):
-#     for label_url in urls[label]:
-#         response = requests.get(label_url)
-#         data = response.json()
-#         #print(f"\tresponse_json:{data}")
-#         try:
-#             db.add_to_postgres(label, data)
-#         except Exception as e:
-#             print("")
-#             print("")
-#             print(f"{label_url}: {e}")
-#             print(f"Error: {e}")
-#             print("")
-#             print("")
 
 def run():
     db.open(pw)
@@ -65,25 +30,12 @@ def run():
     for film in urls["films"]:
         db.fetch("films", film)
 
-    # print("Fetching Films...")
-    # store_url("films")
-    # print("Fetching Planets...")
-    # store_url("planets")
-    # print("Fetching Starships...")
-    # store_url("starships")
-    # print("Fetching Characters...")
-    # store_url("characters")
-    # print("Fetching Species...")
-    # store_url("species")
-    # print("Fetching Vehicles...")
-    # store_url("vehicles")
-
+    db.create_fact_tables()
     db.close()
     print("Database closed")
 
 
 if __name__ == "__main__":
-    #pw = os.environ.get('POSTGRES_PASSWORD')
     pw = "postgres_password"
     run()
 
