@@ -3,6 +3,7 @@ from datetime import datetime
 import requests
 import json
 import pandas as pd
+import MRClean
 from psycopg2 import sql
 from sqlalchemy import create_engine
 
@@ -10,23 +11,32 @@ from sqlalchemy import create_engine
 class DBCon:
     def __init__(self):
         self.con = None
+        self.names = {
+            'characters': 'characters',
+            'films': 'films',
+            'species': 'species',
+            'planets': 'planets',
+            'starships': 'starships',
+            'vehicles': 'vehicles',
+            'pilots': 'characters',
+            'people': 'characters',
+            'residents': 'characters'
+        }
 
-    def convert_timestamp(self, ts):
-        if isinstance(ts, str):
-            for fmt in ('%Y-%m-%dT%H:%M:%S.%fZ', '%Y-%m-%dT%H:%M:%SZ'):
-                try:
-                    return datetime.strptime(ts, fmt)
-                except ValueError:
-                    continue
-            raise ValueError(f"Time data '{ts}' does not match any known format")
-        return ts
+
 
     def exists(self, table_name, primary_key):
+        table_name = self.names[table_name]
+        print(f"Does {primary_key} exist in {table_name}",end=" ")
         cursor = self.con.cursor()
         query = f"SELECT EXISTS (SELECT 1 FROM {table_name} WHERE url = %s)"
         cursor.execute(query, (primary_key,))
         exists = cursor.fetchone()[0]
         cursor.close()
+        if exists:
+            print("Yes")
+        else:
+            print("No")
         return exists
 
     def open(self, password):
@@ -48,30 +58,53 @@ class DBCon:
         self.con.close()
 
     def fetch(self, table_name, url):
-        pass
+        if self.exists(table_name, url):
+            return
+        table_name = self.names[table_name]
+        print(f"Fetching data from {url} to {table_name}")
+        response = requests.get(url)
+        json_data = response.json()
+        children = {}
+        for k, v in json_data.items():
+            if isinstance(v, list):
+                children[k] = v
 
-    def add_to_postgres(self, table_name, data_json):
-        df = pd.DataFrame([data_json])
+        rs = []
 
-        if table_name == "starships":
-            def process_crew_value(value):
-                if isinstance(value, str) and '-' in value:
-                    lower, upper = map(int, value.split('-'))
-                    return (lower + upper) // 2
-                elif isinstance(value, str):
-                    return int(value.replace(",", ""))
-                else:
-                    return 0
+        self.add_to_postgres(table_name, json_data)
 
-            df["crew"] = df["crew"].apply(process_crew_value)
-            df["max_atmosphering_speed"] = pd.to_numeric(df["max_atmosphering_speed"].str.extract(r'(\d+)')[0],errors='coerce').fillna(0).astype(int)
-            df["passengers"] = pd.to_numeric(df["passengers"].str.replace(",", ""), errors='coerce').fillna(0).astype(int)
-            df["length"] = pd.to_numeric(df["length"].str.extract(r'(\d+\.?\d*)')[0], errors='coerce')
-        if table_name == "characters":
-            df["mass"] = pd.to_numeric(df["mass"].str.replace(",", ""), errors='coerce').fillna(0).astype(int)
+        for k, v in children.items():
+            for url in v:
+                self.fetch(k, url)
 
+
+
+    def add_to_postgres(self, table_name, json_data):
+        if self.exists(table_name, json_data['url']):
+            return
+
+        df = MRClean.clean(table_name, json_data)
+        #df = pd.DataFrame([json_data])
         engine = create_engine('postgresql+psycopg2://', creator=lambda: self.con)
-        df.to_sql(table_name, con=engine, if_exists='append', index=False)
+        if "homeworld" in json_data:
+            if not self.exists("planets",json_data['homeworld']) and json_data['homeworld'] is not None:
+                self.fetch("planets", json_data['homeworld'])
+
+        existing_df = pd.read_sql(f"SELECT * FROM {table_name} WHERE url = '{json_data['url']}'", con=engine)
+
+        if not existing_df.empty:
+            # Compare 'edited' column to decide whether to update the existing record
+            existing_edited = existing_df['edited'].iloc[0]
+            new_edited = df['edited'].iloc[0]
+
+            if pd.to_datetime(new_edited) > pd.to_datetime(existing_edited):
+                # If the new data is more recent, delete the old record and insert the new one
+                with engine.connect() as conn:
+                    conn.execute(f"DELETE FROM {table_name} WHERE url = '{json_data['url']}'")
+                    df.to_sql(table_name, con=engine, if_exists='append', index=False)
+        else:
+            # If the record doesn't exist, insert it
+            df.to_sql(table_name, con=engine, if_exists='append', index=False)
 
     def create_fact_table(self):
         pass
