@@ -8,8 +8,8 @@ def get_():
     return jsonify({'message': 'Hello, World!'})
 
 @app.route('/api/characters', methods=['GET'])
-def get_startships():
-    return db.get_characters_and_homeworlds().to_json(orient='records')
+def get_gravity_data():
+    return db.get_gravity_data().to_json(orient='records')
 
 if __name__ == '__main__':
     pw = "postgres_password"

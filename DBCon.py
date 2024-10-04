@@ -18,8 +18,6 @@ class DBCon:
                 "children": set()
             }
         }
-
-
         self.names = {
             'characters': 'characters',
             'films': 'films',
@@ -31,8 +29,6 @@ class DBCon:
             'people': 'characters',
             'residents': 'characters'
         }
-
-
 
     def exists(self, table_name, primary_key):
         table_name = self.names[table_name]
@@ -145,29 +141,6 @@ class DBCon:
             print(name1, name2, key1, key2)
         return table_name, key1, key2
 
-    # def add_relationship(self, table1, table2, key1, key2):
-    #     table_name, key1, key2 = self.calculate_relationship_table_name(table1, table2, key1, key2)
-    #
-    #     if not table_name:
-    #         print(f"Cannot determine table name for relationship between {table1} and {table2}")
-    #         return
-    #
-    #     left_field = table_name.split("_")[0] + "_url"
-    #     right_field = table_name.split("_")[1] + "_url"
-    #
-    #     # Check if the relationship already exists
-    #     engine = create_engine('postgresql+psycopg2://', creator=lambda: self.con)
-    #     existing_rel = pd.read_sql(
-    #         f"SELECT * FROM {table_name} WHERE {left_field} = '{key1}' AND {right_field} = '{key2}'", con=engine)
-    #     if not existing_rel.empty:
-    #         print(f"Relationship between {key1} and {key2} already exists.")
-    #         return
-    #
-    #     # Insert new relationship
-    #     query = text(f"INSERT INTO {table_name} ({left_field}, {right_field}) VALUES (:left_val, :right_val)")
-    #     with engine.connect() as conn:
-    #         conn.execute(query, {"left_val": key1, "right_val": key2})
-    #     print(f"Relationship added between {key1} and {key2} in {table_name}")
     def add_relationship(self, table1, table2, key1, key2):
         table_name, key1, key2 = self.calculate_relationship_table_name(table1, table2, key1, key2)
         left_field = table_name.split("_")[0] + "_url"
@@ -196,10 +169,8 @@ class DBCon:
 
 
     def create_fact_table_gravity_effect(self):
-        # Create an engine using the provided psycopg2 connection
         engine = create_engine('postgresql+psycopg2://', creator=lambda: self.con)
 
-        # Define the SQL query to join the necessary fields from characters and planets tables
         query = '''
         SELECT 
             characters.name AS character_name, 
@@ -218,18 +189,22 @@ class DBCon:
         planets.name;
         '''
 
-        # Load the data into a pandas DataFrame
         df = pd.read_sql(query, con=engine)
-
-        # Create the fact table in the database
         fact_table_name = 'fact_character_height_mass_gravity'
-
-        # Push the DataFrame to the fact table
         df.to_sql(fact_table_name, con=engine, if_exists='replace', index=False)
-
         print(f"Fact table '{fact_table_name}' created successfully with {len(df)} records.")
 
-    # Example usage
-    # Assuming 'con' is your open psycopg2 connection
-    # create_fact_table(con)
 
+
+    def get_gravity_data(self):
+        try:
+            query = "SELECT * FROM fact_character_height_mass_gravity"
+            df = pd.read_sql_query(query, self.con)
+            print(df)
+            return df
+
+        except Exception as e:
+            print(f"Error fetching data from fact table: {e}")
+
+        finally:
+            pass

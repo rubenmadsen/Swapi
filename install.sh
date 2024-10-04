@@ -6,29 +6,30 @@ GRAFANA_URL="http://localhost:4569"
 ADMIN_USERNAME="admin"
 ADMIN_PASSWORD="admin"
 
-# Create a Docker network
 docker network create swapi-network
 
-# Run PostgreSQL in Docker
 docker run --name my-postgres --network swapi-network \
   -e POSTGRES_PASSWORD="postgres_password" \
   -v pgdata:/var/lib/postgresql/data \
   -p 5432:5432 \
   -d postgres
 
-# Wait for the PostgreSQL container to start
 sleep 10
 
-# Initialize the PostgreSQL database
 cat init.sql | docker exec -i my-postgres psql -U postgres
 
-# Wait for the initialization to complete
 sleep 5
 
-# Run your Python script to fetch data
 python3 main.py
+sleep 1
+python3 rest.py
 
-# Run Grafana in Docker with port binding to 4569 externally
+exit 0
+
+
+
+
+
 docker run --name my-grafana --network swapi-network \
   -p 4569:3000 \
   -e "GF_SECURITY_ADMIN_PASSWORD=$ADMIN_PASSWORD" \
@@ -40,10 +41,8 @@ docker run --name my-grafana --network swapi-network \
   -v grafana-storage:/var/lib/grafana \
   -d grafana/grafana
 
-# Wait for Grafana to start
 sleep 15
 
-# Create Grafana API key
 GRAFANA_API_KEY=$(curl -X POST "$GRAFANA_URL/api/auth/keys" \
   -u "$ADMIN_USERNAME:$ADMIN_PASSWORD" \
   -H "Content-Type: application/json" \
@@ -53,7 +52,6 @@ GRAFANA_API_KEY=$(curl -X POST "$GRAFANA_URL/api/auth/keys" \
     "secondsToLive": 86400
   }' | jq -r '.key')
 
-# Check if the API key was created successfully
 if [[ -z "$GRAFANA_API_KEY" || "$GRAFANA_API_KEY" == "null" ]]; then
   echo "Failed to create Grafana API key"
   exit 1
@@ -61,7 +59,6 @@ else
   echo "Generated Grafana API Key: $GRAFANA_API_KEY"
 fi
 
-# Set up the PostgreSQL datasource in Grafana
 curl -X POST "$GRAFANA_URL/api/datasources" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $GRAFANA_API_KEY" \
@@ -79,7 +76,6 @@ curl -X POST "$GRAFANA_URL/api/datasources" \
         }
       }'
 
-# Dashboard creation JSON
 DASHBOARD_JSON=$(cat <<EOF
 {
   "dashboard": {
@@ -131,19 +127,15 @@ DASHBOARD_JSON=$(cat <<EOF
 EOF
 )
 
-# Use curl to create the dashboard
 CREATE_DASHBOARD_RESPONSE=$(curl -X POST "$GRAFANA_URL/api/dashboards/db" \
      -H "Content-Type: application/json" \
      -H "Authorization: Bearer $GRAFANA_API_KEY" \
      --data-binary "$DASHBOARD_JSON")
 
-# Extract the UID from the response
 DASHBOARD_UID=$(echo $CREATE_DASHBOARD_RESPONSE | jq -r '.uid')
 
-# Wait for the dashboard to be created
 sleep 5
 
-# Create a snapshot for public sharing
 SNAPSHOT_RESPONSE=$(curl -X POST "$GRAFANA_URL/api/snapshots" \
      -H "Content-Type: application/json" \
      -H "Authorization: Bearer $GRAFANA_API_KEY" \
@@ -154,9 +146,7 @@ SNAPSHOT_RESPONSE=$(curl -X POST "$GRAFANA_URL/api/snapshots" \
          }
      }")
 
-# Extract the snapshot URL from the response
 SNAPSHOT_URL=$(echo $SNAPSHOT_RESPONSE | jq -r '.url')
 PUBLIC_SNAPSHOT_URL=$(echo $SNAPSHOT_URL | sed 's/3000/4569/')
 
-# Output the snapshot URL (public link)
 echo "Public Snapshot URL: $PUBLIC_SNAPSHOT_URL"
