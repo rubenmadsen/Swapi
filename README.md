@@ -32,4 +32,4 @@ and add this line "0 2 * * * /usr/bin/python /path/to/main.py"
 ```bash
 run ./path/to/rest.sh
 ```
-Open web browser and goto: http://localhost:5000/api/characters
+Open web browser and goto: http://localhost:4200/api/character_gravity

@@ -7,7 +7,7 @@ db = DBCon()
 def get_():
     return jsonify({'message': 'Hello, World!'})
 
-@app.route('/api/characters', methods=['GET'])
+@app.route('/api/character_gravity', methods=['GET'])
 def get_gravity_data():
     return db.get_gravity_data().to_json(orient='records')
 
